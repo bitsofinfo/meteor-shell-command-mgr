@@ -1,0 +1,140 @@
+<head>
+  <title>powershell-meteor</title>
+</head>
+
+<body>
+  <div class="container">
+    {{> commandForm}}
+
+    {{> commandsList}}
+  </div>
+</body>
+
+<template name="commandsList">
+  <div id="commandsListContainer">
+    <table class="table table-striped">
+    <caption>Registered commands</caption>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Command Name</th>
+          <th>Command</th>
+          <th>Return Type</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+      {{#each commands}}
+        {{> commandRow}}
+      {{/each}}
+      </tbody>
+    </table>
+  </div>
+</template>
+
+
+<template name="commandForm">
+
+  <div id="commandFormContainer">
+
+    <p class="text-danger">
+      <ul>
+        {{#each sessionErrors}}
+          <li>{{msg}}</li>
+        {{/each}}
+      </ul>
+    </p>
+
+    <form id="saveCommandForm">
+
+      <div class="form-group">
+        <label for="commandName">Command Name</label>
+        <input type="text" class="form-control" id="commandName" placeholder="Enter command name">
+      </div>
+
+      <div class="form-group">
+        <label for="command">Command template - [literal command name] [hard wired options] {{|{arguments}}}</label>
+        <input type="text" class="form-control" id="command" placeholder="Enter command template">
+      </div>
+
+      <div class="form-group">
+        <label for="returnType">Expected return type</label>
+        <select name="returnType">
+          <option value="none">None</option>
+          <option value="json">JSON</option>
+        </select>
+      </div>
+
+      {{> argumentsList}}
+
+      <button id="btnSaveCommand" type="button" class="btn btn-primary">Save command</button>
+    </form>
+  </div>
+
+</template>
+
+
+
+<template name="commandRow">
+  <tr>
+    <td>{{_id}}</td>
+    <td>{{commandName}}</td>
+    <td>{{command}}</td>
+    <td>{{returnType}}</td>
+    <td><button type="button" id="{{_id}}" class="btnRemoveCommand btn btn-danger">&times;</button></td>
+  </tr>
+</template>
+
+
+<template name="argumentsList">
+  <table class="table table-striped">
+
+  <caption>Arguments</caption>
+    <thead>
+      <tr>
+        <th>Argument</th>
+        <th>Default value</th>
+        <th>is valued?</th>
+        <th>is quoted?</th>
+        <th></th>
+      </tr>
+    </thead>
+
+    <tbody>
+
+    <tr>
+      <td>
+        <input type="text" class="form-control" id="ctrlArgumentName">
+      </td>
+      <td>
+        <input type="text" class="form-control" id="ctrlDefaultValue">
+      </td>
+      <td>
+        <input type="checkbox" id="ctrlIsValued" value="1">
+      </td>
+      <td>
+        <input type="checkbox" id="ctrlIsQuoted" value="1">
+      </td>
+      <td>
+        <button type="button" id="btnAddArgument" class="btn btn-info">+</button>
+      </td>
+    </tr>
+
+    {{#each arguments}}
+      {{> argumentRow}}
+    {{/each}}
+    </tbody>
+  </table>
+</template>
+
+<template name="argumentRow">
+  <tr>
+    <td>{{argumentName}}</td>
+    <td>{{defaultValue}}</td>
+    <td>{{isValued}}</td>
+    <td>{{isQuoted}}</td>
+    <td>
+      <button type="button" id="{{_id}}" class="btnRemoveArgument btn btn-danger">&times;</button>
+    </td>
+  </tr>
+</template>

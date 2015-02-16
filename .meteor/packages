@@ -9,3 +9,5 @@ autopublish
 insecure
 nemo64:bootstrap
 less
+raix:handlebar-helpers
+mizzao:bootboxjs

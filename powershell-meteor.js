@@ -5,12 +5,19 @@ Arguments = new Mongo.Collection("arguments");
 
 if (Meteor.isClient) {
 
-  Session.set('errors',[]);
+  Session.set('commandFormErrors',[]);
+  Session.set('argumentFormErrors',[]);
   Session.set('arguments',{});
 
   Template.commandForm.helpers({
-      sessionErrors: function() {
-        return Session.get('errors');
+      commandFormErrors: function() {
+        return Session.get('commandFormErrors');
+      }
+  });
+
+  Template.argumentsForm.helpers({
+      argumentFormErrors: function() {
+        return Session.get('argumentFormErrors');
       }
   });
 
@@ -21,7 +28,7 @@ if (Meteor.isClient) {
   });
 
   // @see https://github.com/meteor/meteor/issues/2194
-  Template.argumentsList.helpers({
+  Template.argumentsForm.helpers({
       arguments: function () {
         var toReturn = [];
         var args = Session.get('arguments');
@@ -41,6 +48,10 @@ if (Meteor.isClient) {
     // to be persisted
     "click #btnSaveCommand": function (event) {
 
+
+      $('#commandName').parent().removeClass('has-feedback has-error');
+      $('#command').parent().removeClass('has-feedback has-error');
+
       var form = Template.instance().find('#saveCommandForm');
       var commandName = form.commandName.value;
       var command = form.command.value;
@@ -51,12 +62,17 @@ if (Meteor.isClient) {
       Meteor.call("addCommand", commandName, command, returnType, arguments, function(error,result) {
 
         if (error) {
-          Session.set('errors',[{'msg':error.message,'stack':error.stack}]);
+          $('#commandName').parent().addClass('has-feedback has-error');
+          $('#command').parent().addClass('has-feedback has-error');
+          Session.set('commandFormErrors',[{'msg':error.message,'stack':error.stack}]);
 
         } else {
           form.commandName.value = "";
           form.command.value = "";
           form.returnType.value = "";
+
+          Session.set('arguments',{});
+          Session.set('errors',[]);
         }
 
       });
@@ -71,11 +87,38 @@ if (Meteor.isClient) {
     // just adds an argument to the session
     "click #btnAddArgument": function (event) {
 
+      Session.set('argumentFormErrors',[]);
+
+      $('#ctrlArgumentName').parent().removeClass('has-feedback has-error');
+      $('#ctrlDefaultValue').parent().removeClass('has-feedback has-error');
+
       var template = Template.instance();
       var argumentName = template.find('#ctrlArgumentName').value;
       var defaultValue = template.find('#ctrlDefaultValue').value;
       var isQuoted = template.find('#ctrlIsQuoted').checked;
       var isValued = template.find('#ctrlIsValued').checked;
+
+      var hasErrors = false;
+
+      if (argumentName.trim().length == 0) {
+        $('#ctrlArgumentName').parent().addClass('has-feedback has-error');
+        var errors = Session.get('argumentFormErrors');
+        errors.push({'msg':'argument name is required'});
+        Session.set('argumentFormErrors',errors);
+        hasErrors = true;
+      }
+
+      if (!isValued && defaultValue.trim().length > 0) {
+        $('#ctrlDefaultValue').parent().addClass('has-feedback has-error');
+        var errors = Session.get('argumentFormErrors');
+        errors.push({'msg':'is valued is not checked, yet default value is defined!'});
+        Session.set('argumentFormErrors',errors);
+        hasErrors = true;
+      }
+
+      if (hasErrors) {
+        return false;
+      }
 
       var arguments = Session.get('arguments');
 
@@ -90,6 +133,11 @@ if (Meteor.isClient) {
                         };
 
       Session.set('arguments',arguments);
+
+      template.find('#ctrlArgumentName').value = '';
+      template.find('#ctrlDefaultValue').value = '';
+      template.find('#ctrlIsQuoted').checked = false;
+      template.find('#ctrlIsValued').checked = false;
 
       // Prevent default form submit
       return false;

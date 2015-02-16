@@ -4,71 +4,129 @@
 
 <body>
   <div class="container">
+
+    <nav class="navbar navbar-default">
+      <div class="container-fluid">
+
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+          <a class="navbar-brand" href="#">Powershell Command Mgr</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+          <ul class="nav navbar-nav navbar-center">
+            <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Menu <span class="caret"></span></a>
+              <ul class="dropdown-menu" role="menu">
+                <li><a href="#">Construct command configs</a></li>
+                <li><a href="#">View command configs </a></li>
+                <li><a href="#">Execute commands</a></li>
+              </ul>
+            </li>
+          </ul>
+        </div><!-- /.navbar-collapse -->
+      </div><!-- /.container-fluid -->
+    </nav>
+
+
     {{> commandForm}}
 
     {{> commandsList}}
   </div>
+
 </body>
 
+
 <template name="commandsList">
-  <div id="commandsListContainer">
-    <table class="table table-striped">
-    <caption>Registered commands</caption>
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Command Name</th>
-          <th>Command</th>
-          <th>Return Type</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-      {{#each commands}}
-        {{> commandRow}}
-      {{/each}}
-      </tbody>
-    </table>
+
+  <div id="commandsListContainer" class="panel panel-primary">
+
+    <div class="panel-heading">
+      <h3 class="panel-title">Command configs</h3>
+    </div>
+
+    <div class="panel-body">
+
+      <table class="table table-striped">
+      <caption>Registered commands</caption>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Command Name</th>
+            <th>Command</th>
+            <th>Return Type</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+        {{#each commands}}
+          {{> commandRow}}
+        {{/each}}
+        </tbody>
+      </table>
+
+    </div>
+
   </div>
 </template>
 
 
 <template name="commandForm">
 
-  <div id="commandFormContainer">
+  <div id="commandFormContainer" class="panel panel-primary">
 
-    <p class="text-danger">
-      <ul>
-        {{#each sessionErrors}}
-          <li>{{msg}}</li>
-        {{/each}}
-      </ul>
-    </p>
+    <div class="panel-heading">
+      <h3 class="panel-title">Constuct new command config</h3>
+    </div>
 
-    <form id="saveCommandForm">
+    <div class="panel-body">
 
-      <div class="form-group">
-        <label for="commandName">Command Name</label>
-        <input type="text" class="form-control" id="commandName" placeholder="Enter command name">
-      </div>
 
-      <div class="form-group">
-        <label for="command">Command template - [literal command name] [hard wired options] {{|{arguments}}}</label>
-        <input type="text" class="form-control" id="command" placeholder="Enter command template">
-      </div>
+        {{#if commandFormErrors}}
+          <div class="alert alert-danger alert-dismissible" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            {{#each commandFormErrors}}
+              {{msg}}<br/>
+            {{/each}}
+          </div>
+        {{/if}}
 
-      <div class="form-group">
-        <label for="returnType">Expected return type</label>
-        <select name="returnType">
-          <option value="none">None</option>
-          <option value="json">JSON</option>
-        </select>
-      </div>
+        <form id="saveCommandForm">
 
-      {{> argumentsList}}
+          <div class="form-group">
+            <label class="control-label" for="commandName">Logical Command Name</label>
+            <input type="text" class="form-control" id="commandName" placeholder="Enter command name">
+          </div>
 
-      <button id="btnSaveCommand" type="button" class="btn btn-primary">Save command</button>
-    </form>
+          <div class="form-group">
+            <label class="control-label" for="command">Command template</label>
+            <input type="text" class="form-control" id="command" placeholder="[literal command name] [hard wired options] {{|{arguments}}}">
+          </div>
+
+          <div class="panel panel-info">
+            <div class="panel-heading">
+              <h3 class="panel-title">Build arguments</h3>
+            </div>
+
+            <div class="panel-body">
+              {{> argumentsForm}}
+            </div>
+          </div>
+
+
+          <div class="form-group">
+            <label class="control-label" for="returnType">Expected return type</label><br/>
+            <select name="returnType">
+              <option value="none">None</option>
+              <option value="json">JSON</option>
+            </select>
+          </div>
+
+          <button id="btnSaveCommand" type="button" class="btn btn-success">Save command and arguments configuration</button>
+        </form>
+    </div>
+
   </div>
 
 </template>
@@ -86,40 +144,59 @@
 </template>
 
 
-<template name="argumentsList">
-  <table class="table table-striped">
+<template name="argumentsForm">
 
-  <caption>Arguments</caption>
-    <thead>
-      <tr>
-        <th>Argument</th>
-        <th>Default value</th>
-        <th>is valued?</th>
-        <th>is quoted?</th>
-        <th></th>
-      </tr>
-    </thead>
+  {{#if argumentFormErrors}}
+    <div class="alert alert-danger alert-dismissible" role="alert">
+      <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      {{#each argumentFormErrors}}
+        {{msg}}<br/>
+      {{/each}}
+    </div>
+  {{/if}}
 
+  <table class="table">
+    <caption>Append new argument</caption>
     <tbody>
-
     <tr>
       <td>
-        <input type="text" class="form-control" id="ctrlArgumentName">
+        <div class="form-group">
+          <input type="text" class="form-control" id="ctrlArgumentName" placeholder="enter argument name">
+        </div>
       </td>
       <td>
-        <input type="text" class="form-control" id="ctrlDefaultValue">
+        <div class="form-group">
+          <input type="text" class="form-control" id="ctrlDefaultValue" placeholder="optional default value">
+        </div>
       </td>
       <td>
-        <input type="checkbox" id="ctrlIsValued" value="1">
+        <div class="form-group">
+          <label class="control-label" for="ctrlIsValued">is valued?</label>
+          <input type="checkbox" id="ctrlIsValued" value="1">
+        </div>
       </td>
       <td>
-        <input type="checkbox" id="ctrlIsQuoted" value="1">
+        <div class="form-group">
+          <label class="control-label" for="ctrlIsQuoted">is quoted?</label>
+          <input type="checkbox" id="ctrlIsQuoted" value="1">
+        </div>
       </td>
       <td>
-        <button type="button" id="btnAddArgument" class="btn btn-info">+</button>
+        <button type="button" id="btnAddArgument" class="btn btn-info">append</button>
       </td>
     </tr>
+    </tbody>
+  </table>
 
+  <table class="table table-striped">
+    <caption>Arguments</caption>
+    <thead>
+      <th>argument</th>
+      <th>default value</th>
+      <th>is valued?</th>
+      <th>is quoted?</th>
+    </thead>
+    <tbody>
     {{#each arguments}}
       {{> argumentRow}}
     {{/each}}

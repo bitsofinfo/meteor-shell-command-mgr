@@ -249,7 +249,7 @@ if (Meteor.isClient) {
           clearArgumentFormErrors();
 
           var toEditId = event.target.id;
-          var command = Commands.findOne({'_id':toEditId});
+          var command = Commands.findOne(toEditId);
           var argCursor = Arguments.find({'commandId':toEditId}, {sort : {createdAt:1}});
           var arguments = argCursor.fetch();
 

@@ -43,18 +43,14 @@
 <template name="commandEditorModal">
 
     <div class="modal fade" id="commandEditorModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
+      <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
             <h4 class="modal-title" id="myModalLabel">Edit command: {{currentEditCommand.commandName}}</h4>
           </div>
           <div class="modal-body">
-            {{> commandFormBody command=currentEditCommand showBtnRemoveArgument=true loadArgumentsFrom='session'}}
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary">Save changes</button>
+            {{> commandFormBody command=currentEditCommand showBtnRemoveArgument=true loadArgumentsFrom='session' actionLabel='Save'}}
           </div>
         </div>
       </div>
@@ -108,7 +104,7 @@
     </div>
 
     <div class="panel-body collapse" id="commandFormPanelBody">
-        {{> commandFormBody showBtnRemoveArgument=false loadArgumentsFrom='session'}}
+        {{> commandFormBody showBtnRemoveArgument=false loadArgumentsFrom='session' actionLabel='Add'}}
     </div>
 
   </div>
@@ -128,6 +124,8 @@
   {{/if}}
 
   <form id="saveCommandForm">
+
+    <input type="hidden" id="targetCommandId" value="{{command._id}}"/>
 
     <div class="form-group">
       <label class="control-label" for="commandName">Logical Command Name</label>
@@ -153,13 +151,13 @@
     <div class="form-group">
       <label class="control-label" for="returnType">Expected return type</label><br/>
       <select name="returnType">
-        <option value="none">None</option>
-        <option value="json">JSON</option>
+        <option value="none" {{outputIfEq 'selected' command.returnType 'none'}}>None</option>
+        <option value="json" {{outputIfEq 'selected' command.returnType 'json'}}>JSON</option>
       </select>
     </div>
 
     <button id="btnSaveCommand" type="button" class="btn btn-success">
-      <span class="glyphicon glyphicon-floppy-disk" aria-hidden="true"></span> Save command and arguments configuration</button>
+      <span class="glyphicon glyphicon-floppy-disk" aria-hidden="true"></span> {{actionLabel}} command and arguments configuration</button>
   </form>
 
 </template>

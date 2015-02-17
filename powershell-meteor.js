@@ -5,9 +5,21 @@ Arguments = new Mongo.Collection("arguments");
 
 if (Meteor.isClient) {
 
-  Session.set('commandFormErrors',[]);
-  Session.set('argumentFormErrors',[]);
-  Session.set('arguments',{});
+
+  UI.registerHelper('outputIfEq', function(toOutput,val1,val2) {
+    return (val1 == val2) ? toOutput : '';
+  });
+
+  var initSessionVars = function() {
+    Session.set('arguments',{});
+    Session.set('commandFormErrors',[]);
+    Session.set('argumentFormErrors',[]);
+    Session.set('currentEditCommand',null);
+  }
+
+
+  initSessionVars();
+
 
   Template.commandFormBody.helpers({
       commandFormErrors: function() {
@@ -44,7 +56,7 @@ if (Meteor.isClient) {
 
 
         } else {
-          return Arguments.find({'commandId':commandId}, {sort : {createdAt:-1}});
+          return Arguments.find({'commandId':commandId}, {sort : {createdAt:1}});
         }
 
       }
@@ -67,7 +79,15 @@ if (Meteor.isClient) {
       }
   });
 
+  var clearCommandFormErrors = function() {
+    $('#commandName').parent().removeClass('has-feedback has-error');
+    $('#command').parent().removeClass('has-feedback has-error');
+  }
 
+  var clearArgumentFormErrors = function() {
+    $('#ctrlArgumentName').parent().removeClass('has-feedback has-error');
+    $('#ctrlDefaultValue').parent().removeClass('has-feedback has-error');
+  }
 
 
   Template.commandFormBody.events({
@@ -77,18 +97,18 @@ if (Meteor.isClient) {
     // to be persisted
     "click #btnSaveCommand": function (event) {
 
-
-      $('#commandName').parent().removeClass('has-feedback has-error');
-      $('#command').parent().removeClass('has-feedback has-error');
+      clearCommandFormErrors();
 
       var form = Template.instance().find('#saveCommandForm');
       var commandName = form.commandName.value;
       var command = form.command.value;
       var returnType = form.returnType.value;
+      var targetCommandId = form.targetCommandId.value;
 
       var arguments = Session.get('arguments');
 
-      Meteor.call("addCommand", commandName, command, returnType, arguments, function(error,result) {
+      Meteor.call("saveCommand", targetCommandId, commandName,
+                            command, returnType, arguments, function(error,result) {
 
         if (error) {
           $('#commandName').parent().addClass('has-feedback has-error');
@@ -96,13 +116,13 @@ if (Meteor.isClient) {
           Session.set('commandFormErrors',[{'msg':error.message,'stack':error.stack}]);
 
         } else {
-          form.commandName.value = "";
-          form.command.value = "";
-          form.returnType.value = "";
+          form.commandName.value = null;
+          form.command.value = null;
+          form.returnType.value = null;
 
-          Session.set('arguments',{});
-          Session.set('commandFormErrors',[]);
-          Session.set('argumentFormErrors',[]);
+          initSessionVars();
+
+          $('#commandEditorModal').modal('hide');
         }
 
       });
@@ -113,8 +133,6 @@ if (Meteor.isClient) {
 
   });
 
-
-
   Template.argumentsForm.events({
 
 
@@ -124,8 +142,7 @@ if (Meteor.isClient) {
 
         Session.set('argumentFormErrors',[]);
 
-        $('#ctrlArgumentName').parent().removeClass('has-feedback has-error');
-        $('#ctrlDefaultValue').parent().removeClass('has-feedback has-error');
+        clearArgumentFormErrors();
 
         var template = Template.instance();
         var argumentName = template.find('#ctrlArgumentName').value;
@@ -169,8 +186,8 @@ if (Meteor.isClient) {
 
         Session.set('arguments',arguments);
 
-        template.find('#ctrlArgumentName').value = '';
-        template.find('#ctrlDefaultValue').value = '';
+        template.find('#ctrlArgumentName').value = null;
+        template.find('#ctrlDefaultValue').value = null;
         template.find('#ctrlIsQuoted').checked = false;
         template.find('#ctrlIsValued').checked = false;
 
@@ -230,15 +247,14 @@ if (Meteor.isClient) {
       "click .btnEditCommand": function (event) {
 
           $("#commandFormPanelBody").collapse('hide');
-          Session.set('arguments',{});
-          Session.set('commandFormErrors',[]);
-          Session.set('argumentFormErrors',[]);
-          $('#commandName').parent().removeClass('has-feedback has-error');
-          $('#command').parent().removeClass('has-feedback has-error');
+
+          initSessionVars();
+          clearCommandFormErrors();
+          clearArgumentFormErrors();
 
           var toEditId = event.target.id;
           var command = Commands.findOne({'_id':toEditId});
-          var argCursor = Arguments.find({'commandId':toEditId}, {sort : {createdAt:-1}});
+          var argCursor = Arguments.find({'commandId':toEditId}, {sort : {createdAt:1}});
           var arguments = argCursor.fetch();
 
           var sessionArgs = {};
@@ -248,8 +264,16 @@ if (Meteor.isClient) {
           }
 
 
+          // put current command and arguments in session
           Session.set('currentEditCommand',command);
           Session.set('arguments',sessionArgs);
+
+          // clear stateful items for the form if it closes
+          $('#commandEditorModal').on('hidden.bs.modal', function (e) {
+            initSessionVars();
+            clearCommandFormErrors();
+            clearArgumentFormErrors();
+          })
 
         },
 
@@ -271,12 +295,19 @@ Meteor.methods({
   },
 
 
-  addCommand: function (commandName, command, returnType, arguments) {
+  saveCommand: function (targetCommandId, commandName, command, returnType, arguments) {
 
-    var cmd = Commands.findOne({commandName: commandName});
-    if (typeof(cmd) != 'undefined') {
-      throw new Meteor.Error("cmd-exists", "addCommand() command "
-            + commandName + " already exists");
+    var cmdIsNew = true;
+
+    // if no command id, duplicate check
+    if (!targetCommandId || targetCommandId.trim() == '') {
+      cmdIsNew = false;
+
+      var cmd = Commands.findOne({commandName: commandName});
+      if (typeof(cmd) != 'undefined') {
+        throw new Meteor.Error("cmd-exists", "addCommand() command "
+              + commandName + " already exists");
+      }
     }
 
     if (commandName.length == 0) {
@@ -287,27 +318,55 @@ Meteor.methods({
       throw new Meteor.Error("cmd-name-req", "addCommand() command is required");
     }
 
-    var commandId = Commands.insert({
+    var commandId = targetCommandId;
+    var result = Commands.upsert({'_id' : targetCommandId },
+                    {
                       'commandName': commandName,
                       'command': command,
                       'returnType': returnType,
-                      'createdAt': new Date()
+                      'modifiedAt': new Date()
                     });
+
+    // if blank command id then it is new
+    if (!commandId || commandId.trim() == '') {
+      commandId = result.insertedId;
+    }
+
+
+    var argumentIdsToRetain = [];
 
     if (typeof(arguments) != 'undefined') {
 
       for (argName in arguments) {
         var arg = arguments[argName];
-        Arguments.insert({
-                          commandId: commandId,
-                          argumentName: arg.argumentName,
-                          defaultValue: arg.defaultValue,
-                          isQuoted: arg.isQuoted,
-                          isValued: arg.isValued,
-                          createdAt: new Date()
-                        });
+
+        var result = Arguments.upsert({'_id': arg._id },
+                                 {
+                                  'commandId': commandId,
+                                  'argumentName': arg.argumentName,
+                                  'defaultValue': arg.defaultValue,
+                                  'isQuoted': arg.isQuoted,
+                                  'isValued': arg.isValued,
+                                  'modifiedAt': new Date()
+                                });
+
+
+        if (typeof(result.insertedId) != 'undefined') {
+          argumentIdsToRetain.push(result.insertedId);
+        } else {
+          argumentIdsToRetain.push(arg._id);
+        }
       }
     }
+
+    // purge arguments no longer relevant for the command
+    Arguments.remove({
+                      "commandId": commandId,
+                      "_id": {
+                          "$not": {
+                              "$in": argumentIdsToRetain
+                          }
+                      }});
 
     return commandId;
 

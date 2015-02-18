@@ -150,7 +150,7 @@
 
     <div class="form-group">
       <label class="control-label" for="returnType">Expected return type</label><br/>
-      <select name="returnType">
+      <select id="returnType" name="returnType">
         <option value="none" {{outputIfEq 'selected' command.returnType 'none'}}>None</option>
         <option value="json" {{outputIfEq 'selected' command.returnType 'json'}}>JSON</option>
       </select>

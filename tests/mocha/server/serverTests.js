@@ -6,7 +6,7 @@ if (!(typeof MochaWeb === 'undefined')){
       Commands.remove({'_id': /.*/});
       Arguments.remove({'_id': /.*/});
       done();
-    })
+    });
 
     describe("Server initialization", function(){
       it("should have a Meteor version defined", function(){

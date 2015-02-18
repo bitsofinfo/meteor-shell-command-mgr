@@ -7,6 +7,6 @@ Package.describe({
 
 Package.on_use(function (api) {
 	api.use("coffeescript", ["client", "server"]);
-	api.add_files("tests/mocha/client/sampleClientTest.js",["client"]);
-	api.add_files("tests/mocha/server/sampleServerTest.js",["server"]);
+	api.add_files("tests/mocha/client/clientTests.js",["client"]);
+	api.add_files("tests/mocha/server/serverTests.js",["server"]);
 });

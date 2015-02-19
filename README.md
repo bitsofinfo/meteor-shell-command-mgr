@@ -2,7 +2,7 @@
 
 Functioning demo available at [meteor-shell-command-mgr.meteor.com](http://meteor-shell-command-mgr.meteor.com)
 
-This small Meteor app was an experiment to manage a little database of commands
+This small Meteor/Bootstrap app was an experiment to manage a little database of commands
  and their argument configs, which is rendered as a JSON "command registry"
 intended to used with [powershell-command-executor](https://github.com/bitsofinfo/powershell-command-executor).
 

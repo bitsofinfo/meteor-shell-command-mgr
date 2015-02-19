@@ -1,13 +1,25 @@
 
 if (Meteor.isClient) {
 
-
   UI.registerHelper('outputIfEq', function(toOutput,val1,val2) {
     return (val1 == val2) ? toOutput : '';
   });
 
+  UI.registerHelper('prettyPrintJson', function(toOutput) {
+    return JSON.stringify(toOutput,null,2);
+  });
+
+  var updateCommandRegistry = function() {
+    Meteor.call('generateCommandRegistry', function(error,result) {
+      Session.set('commandRegistry', result);
+    });
+  };
+
   var initSessionVars = function() {
     Session.set('arguments',{});
+
+    updateCommandRegistry();
+
     Session.set('commandFormErrors',[]);
     Session.set('argumentFormErrors',[]);
     Session.set('currentEditCommand',null);
@@ -16,6 +28,11 @@ if (Meteor.isClient) {
 
   initSessionVars();
 
+  Template.commandRegistry.helpers({
+      commandRegistry: function() {
+        return Session.get('commandRegistry');
+      }
+  });
 
   Template.commandFormBody.helpers({
       commandFormErrors: function() {
@@ -229,6 +246,8 @@ if (Meteor.isClient) {
               if (error) {
                 Session.set('errors',[{'msg':error.message,'stack':error.stack}]);
               }
+
+              updateCommandRegistry();
 
             });
 

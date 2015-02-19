@@ -5,40 +5,53 @@
 <body>
   <div class="container">
 
-    <nav class="navbar navbar-default">
-      <div class="container-fluid">
+    {{> navBar}}
 
-        <!-- Brand and toggle get grouped for better mobile display -->
-        <div class="navbar-header">
-          <a class="navbar-brand" href="#">Command Manager</a>
-        </div>
-
-        <!-- Collect the nav links, forms, and other content for toggling -->
-        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-          <ul class="nav navbar-nav navbar-center">
-            <li class="dropdown">
-              <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Menu <span class="caret"></span></a>
-              <ul class="dropdown-menu" role="menu">
-                <li><a href="#">Manage command configs</a></li>
-                <li><a href="#">Execute commands</a></li>
-              </ul>
-            </li>
-          </ul>
-        </div><!-- /.navbar-collapse -->
-      </div><!-- /.container-fluid -->
-    </nav>
-
-    {{> commandRegistry}}
+    {{> about}}
 
     {{> commandForm}}
 
     {{> commandsList}}
 
     {{> commandEditorModal}}
+
+    {{> commandRegistry}}
+
   </div>
 
 
 </body>
+
+<template name="navBar">
+  <nav class="navbar navbar-default">
+    <div class="container-fluid">
+
+      <!-- Brand and toggle get grouped for better mobile display -->
+      <div class="navbar-header">
+        <a class="navbar-brand" href="#">Command Manager</a>
+      </div>
+
+      <!-- Collect the nav links, forms, and other content for toggling -->
+      <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+        <ul class="nav navbar-nav navbar-center">
+          <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Menu <span class="caret"></span></a>
+            <ul class="dropdown-menu" role="menu" id="menuItems">
+              <li><a class="menuItem" data-toggle="collapse" href="#commandFormPanelBody" aria-expanded="false"
+                aria-controls="commandFormPanelBody">Construct new command config</a></li>
+              <li><a class="menuItem" data-toggle="collapse" href="#commandListPanelBody" aria-expanded="true"
+                aria-controls="commandListPanelBody">View/Edit command configs</a></li>
+              <li><a class="menuItem" data-toggle="collapse" href="#registryContainerBody" aria-expanded="false"
+                aria-controls="registryContainerBody">View generated registry config</a></li>
+              <li><a class="menuItem" data-toggle="collapse" href="#aboutContainerBody" aria-expanded="false"
+                aria-controls="aboutContainerBody">About</a></li>
+            </ul>
+          </li>
+        </ul>
+      </div><!-- /.navbar-collapse -->
+    </div><!-- /.container-fluid -->
+  </nav>
+</template>
 
 <template name="commandEditorModal">
 
@@ -90,6 +103,36 @@
     </div>
 
   </div>
+</template>
+
+
+<template name="about">
+
+  <div id="aboutContainer" class="panel panel-primary">
+
+    <div class="panel-heading">
+      <h3 class="panel-title">
+        <a data-toggle="collapse" href="#aboutContainerBody" aria-expanded="false"
+          aria-controls="aboutContainerBody">About</a></h3>
+    </div>
+
+    <div class="panel-body collapse in" id="aboutContainerBody">
+      This small Meteor app was an experiment to manage a little database of commands and their argument
+      configs, which is rendererd as a JSON "command registry" intended to used with
+      <a href="https://github.com/bitsofinfo/powershell-command-executor">powershell-command-executor</a>.
+      <br><br>
+      <p>
+      The intent being to expand this app to be able to invoke the respective commands
+      in the registry, similar to <a href="https://github.com/bitsofinfo/powershell-command-executor-ui">powershell-command-executor-ui</a>
+      or eventually just replace it all-together with this version using Meteor.</p>
+
+      Note when running on meteor.com this app cleans out the "database" of accumulated test-data every 2 hours
+      <BR><BR>
+      Source code available at: <a href="https://github.com/bitsofinfo/meteor-shell-command-mgr">meteor-shell-command-mgr</a>
+    </div>
+
+  </div>
+
 </template>
 
 <template name="commandRegistry">

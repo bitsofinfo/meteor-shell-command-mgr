@@ -1,5 +1,12 @@
 if (Meteor.isServer) {
   Meteor.startup(function () {
-    // code to run on server at startup
+
+      // clean it out every hour
+      // this is only here for when deployed
+      // to meteor.com for the demo
+      Meteor.setInterval( function () {
+          Meteor.call("cleanAllCollections");
+      }, (60000 * 120) );
+
   });
 }

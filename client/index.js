@@ -103,6 +103,19 @@ if (Meteor.isClient) {
   }
 
 
+  Template.navBar.events({
+
+    "click .menuItem": function (event) {
+      var items = $("#menuItems").find("a");
+      items.each(function(i,element) {
+        if (element.hash != event.target.hash) {
+          $(element.hash).removeClass("collapse in").addClass("collapse");
+        }
+      });
+    }
+
+  });
+
   Template.commandFormBody.events({
 
 
